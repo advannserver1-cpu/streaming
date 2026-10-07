@@ -54,11 +54,36 @@ function render(list=movies){
  const g=document.getElementById('grid');
  g.innerHTML=list.length?list.map(m=>`<article class="card" onclick="openMovie(${m.id})"><img class="poster" src="${m.image}" alt=""><div class="info"><div class="title">${m.title}</div><div class="meta">${m.year} • ${m.genre}</div></div></article>`).join(''):'<div class="empty">Film tidak ditemukan.</div>';
 }
-function search(){const q=document.getElementById('q').value.toLowerCase().trim();render(movies.filter(m=>(m.title+' '+m.genre).toLowerCase().includes(q)))}
+async function search(){
+  const q=document.getElementById('q').value.trim();
+  if(!q)return;
+
+  const res=await fetch(
+    'https://www.omdbapi.com/?apikey=564727fa&s='+encodeURIComponent(q)
+  );
+  const data=await res.json();
+
+  if(data.Response!=='True'){
+    render([]);
+    return;
+  }
+
+  const results=data.Search.map(m=>({
+    id:m.imdbID,
+    title:m.Title,
+    year:m.Year,
+    genre:'Film',
+    image:m.Poster!=='N/A'?m.Poster:'',
+    desc:'Hasil pencarian film dari internet.',
+    video:''
+  }));
+
+  render(results);
+  }
 document.getElementById('q').addEventListener('keydown',e=>{if(e.key==='Enter')search()});
 function openMovie(id){
  const m=movies.find(x=>x.id===id);
- document.getElementById('detail').innerHTML=`<img src="${m.image}"><h2>${m.title}</h2><div class="meta">${m.year} • ${m.genre}</div><p>${m.desc}</p><div class="clear"></div><button class="primary watch" onclick="playMovie('${m.video}')">▶ Tonton sekarang</button><div id="playerBox"></div><div class="note">Catatan: sumber video demo di atas hanya untuk pengujian. Untuk aplikasi produksi, gunakan URL streaming yang kamu miliki/izinkan.</div>`;
+ document.getElementById('detail').innerHTML=`<img src="${m.image}"><h2>${m.title}</h2><div class="meta">${m.year} • ${m.genre}</div><p>${m.desc}</p><div class="clear"></div><button class="primary wwatch" onclick="playMovie('${m.video}')">▶ Tonton sekarang</button><div id="playerBox"></div><div class="note">Catatan: sumber video demo di atas hanya untuk pengujian. Untuk aplikasi produksi, gunakan URL streaming yang kamu miliki/izinkan.</div>`;
  document.getElementById('modal').classList.add('show');
 }
 function playMovie(url){document.getElementById('playerBox').innerHTML=`<video class="player" controls autoplay playsinline src="${url}"></video>`}
