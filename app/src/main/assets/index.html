@@ -1,0 +1,70 @@
+<!doctype html>
+<html lang="id">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+<title>NontonKu</title>
+<style>
+:root{--bg:#080a0f;--card:#121621;--muted:#9aa3b5;--accent:#e50914}
+*{box-sizing:border-box}body{margin:0;background:var(--bg);color:#fff;font-family:Arial,sans-serif}
+header{padding:18px 16px 10px;position:sticky;top:0;background:#080a0feF;backdrop-filter:blur(12px);z-index:5}
+.logo{font-size:25px;font-weight:900}.logo span{color:var(--accent)}
+.search{margin-top:13px;display:flex;background:#171b25;border-radius:12px;padding:4px}
+.search input{flex:1;background:none;border:0;outline:0;color:#fff;padding:11px;font-size:15px}.search button,.primary{border:0;border-radius:9px;background:var(--accent);color:#fff;font-weight:800;padding:0 15px}
+main{padding:8px 16px 90px}.section-title{margin:22px 0 12px;font-size:18px}
+.grid{display:grid;grid-template-columns:repeat(2,1fr);gap:12px}.card{background:var(--card);border-radius:12px;overflow:hidden;cursor:pointer}.poster{width:100%;aspect-ratio:2/3;object-fit:cover;background:#202635}.info{padding:9px}.title{font-weight:800;font-size:14px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}.meta{font-size:11px;color:var(--muted);margin-top:5px}
+.hero{border-radius:16px;overflow:hidden;position:relative;height:235px;background:linear-gradient(90deg,#111827,#222)}.hero img{width:100%;height:100%;object-fit:cover;opacity:.62}.heroText{position:absolute;inset:auto 16px 16px}.heroText h1{margin:0 0 6px;font-size:24px}.heroText p{margin:0;color:#d3d7e1;font-size:12px;max-width:75%}
+.empty{text-align:center;color:var(--muted);padding:45px 10px}.modal{position:fixed;inset:0;background:#000D;display:none;z-index:20;padding:20px;overflow:auto}.modal.show{display:block}.sheet{max-width:760px;margin:30px auto;background:#10141e;border-radius:16px;overflow:hidden}.close{float:right;margin:12px;border:0;background:#ffffff18;color:#fff;border-radius:50%;width:36px;height:36px;font-size:20px}.detail{padding:18px}.detail img{width:120px;height:180px;object-fit:cover;border-radius:10px;float:left;margin:0 16px 10px 0}.detail h2{margin-top:0}.detail p{color:#c2c8d5;line-height:1.5;font-size:13px}.clear{clear:both}.watch{width:100%;height:46px;margin-top:12px}.player{width:100%;background:#000;aspect-ratio:16/9;border:0}.note{font-size:11px;color:#8f98aa;margin-top:10px}
+nav{position:fixed;bottom:0;left:0;right:0;background:#0d111aeF;backdrop-filter:blur(12px);display:flex;justify-content:space-around;padding:11px 0 env(safe-area-inset-bottom);z-index:6}nav button{background:none;border:0;color:#8f98aa;font-weight:700}nav button.active{color:#fff}
+@media(min-width:650px){.grid{grid-template-columns:repeat(4,1fr)}main{max-width:1100px;margin:auto}}
+</style>
+</head>
+<body>
+<header>
+  <div class="logo">Nonton<span>Ku</span></div>
+  <div class="search"><input id="q" placeholder="Cari film, series, anime..." autocomplete="off"><button onclick="search()">Cari</button></div>
+</header>
+<main>
+  <section id="home">
+    <div class="hero">
+      <img src="https://images.unsplash.com/photo-1489599849927-2ee91cede3ba?auto=format&fit=crop&w=1200&q=80">
+      <div class="heroText"><h1>Temukan tontonanmu</h1><p>Cari film dan buka halaman detail. Player demo tersedia untuk pengujian aplikasi.</p></div>
+    </div>
+    <h2 class="section-title">Pilihan Demo</h2>
+    <div class="grid" id="grid"></div>
+  </section>
+</main>
+<nav><button class="active" onclick="showHome()">⌂ Beranda</button><button onclick="document.getElementById('q').focus()">⌕ Cari</button></nav>
+
+<div class="modal" id="modal">
+  <div class="sheet">
+    <button class="close" onclick="closeModal()">×</button>
+    <div id="detail" class="detail"></div>
+  </div>
+</div>
+
+<script>
+const movies=[
+ {id:1,title:"Big Buck Bunny",year:2008,genre:"Animation • Family",poster:"https://storage.googleapis.com/coverr-main/mp4/Mt_Baker.mp4",image:"https://peach.blender.org/wp-content/uploads/title_anouncement.jpg?x11217",desc:"Demo video open-media yang dapat dipakai untuk menguji alur player. Ganti sumber ini dengan video yang kamu punya izin untuk tayangkan.",video:"https://storage.googleapis.com/coverr-main/mp4/Mt_Baker.mp4"},
+ {id:2,title:"Sintel",year:2010,genre:"Animation • Fantasy",image:"https://durian.blender.org/wp-content/uploads/2010/06/sintel_poster.jpg",desc:"Contoh katalog untuk prototype. Untuk produksi, sambungkan metadata dan sumber video berlisensi.",video:"https://storage.googleapis.com/coverr-main/mp4/Mt_Baker.mp4"},
+ {id:3,title:"Tears of Steel",year:2012,genre:"Sci-Fi • Action",image:"https://mango.blender.org/wp-content/uploads/2013/05/tears_of_steel_poster.jpg",desc:"Contoh judul untuk menguji pencarian dan halaman detail.",video:"https://storage.googleapis.com/coverr-main/mp4/Mt_Baker.mp4"},
+ {id:4,title:"Demo Movie",year:2026,genre:"Demo • Streaming",image:"https://images.unsplash.com/photo-1485846234645-a62644f84728?auto=format&fit=crop&w=600&q=80",desc:"Judul demo lokal untuk menguji UI aplikasi.",video:"https://storage.googleapis.com/coverr-main/mp4/Mt_Baker.mp4"}
+];
+function render(list=movies){
+ const g=document.getElementById('grid');
+ g.innerHTML=list.length?list.map(m=>`<article class="card" onclick="openMovie(${m.id})"><img class="poster" src="${m.image}" alt=""><div class="info"><div class="title">${m.title}</div><div class="meta">${m.year} • ${m.genre}</div></div></article>`).join(''):'<div class="empty">Film tidak ditemukan.</div>';
+}
+function search(){const q=document.getElementById('q').value.toLowerCase().trim();render(movies.filter(m=>(m.title+' '+m.genre).toLowerCase().includes(q)))}
+document.getElementById('q').addEventListener('keydown',e=>{if(e.key==='Enter')search()});
+function openMovie(id){
+ const m=movies.find(x=>x.id===id);
+ document.getElementById('detail').innerHTML=`<img src="${m.image}"><h2>${m.title}</h2><div class="meta">${m.year} • ${m.genre}</div><p>${m.desc}</p><div class="clear"></div><button class="primary watch" onclick="playMovie('${m.video}')">▶ Tonton sekarang</button><div id="playerBox"></div><div class="note">Catatan: sumber video demo di atas hanya untuk pengujian. Untuk aplikasi produksi, gunakan URL streaming yang kamu miliki/izinkan.</div>`;
+ document.getElementById('modal').classList.add('show');
+}
+function playMovie(url){document.getElementById('playerBox').innerHTML=`<video class="player" controls autoplay playsinline src="${url}"></video>`}
+function closeModal(){document.getElementById('modal').classList.remove('show');document.getElementById('detail').innerHTML=''}
+function showHome(){render();window.scrollTo(0,0)}
+render();
+</script>
+</body>
+</html>
